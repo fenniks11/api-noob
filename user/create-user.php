@@ -14,6 +14,7 @@ include_once '../object/user.php';
 $database = new Database();
 $db = $database->getConnection();
 
+
 // instantiate product object
 $user = new User($db);
 
@@ -26,28 +27,45 @@ $data = json_decode(file_get_contents("php://input"));
 $user->username = $data->username;
 $user->password = $data->password;
 
-// use the create() method here
+// cek_validation data
+$conn = mysqli_connect('localhost', 'root', '');
+mysqli_select_db($conn, 'api-noob');
+$cek = mysqli_num_rows(mysqli_query($conn, "SELECT * FROM users WHERE username='$user->username'"));
+if ($cek > 0) {
+    // set response code
+    http_response_code(409);
 
-// create the user
-if (
-    !empty($user->username) &&
-    !empty($user->password) &&
-    $user->create()
+    // display message: unable to create user
+    echo json_encode(array("message" => "The username you entered already exists."));
+} elseif (
+    $cek == false && !empty($user->username) &&
+    !empty($user->password) && $user->create()
 ) {
-
     // set response code
     http_response_code(200);
 
     // display message: user was created
     echo json_encode(array("message" => "User was created."));
-}
-
-// message if unable to create user
-else {
-
+} else {
     // set response code
     http_response_code(400);
 
     // display message: unable to create user
     echo json_encode(array("message" => "Unable to create user."));
 }
+
+// // create the user
+// if (
+//     !empty($user->username) &&
+//     !empty($user->password) &&
+//     $user->create()
+// ) {
+
+   
+// }
+
+// // message if unable to create user
+// else {
+
+  
+// }
